@@ -30,10 +30,11 @@ def generic_iterative_method(a, b, tol, stop='scaled_residue'):
     # get A matrix dimensions
     n = a.shape[0]
 
-    # init counter, stop_check, null vector
+    # init counter, stop_check, null vector, max_iter
     k = 0
     stop_check = False
     x = np.zeros(n)
+    max_iter = 2000 if n <= 2000 else n
 
 
     
@@ -45,7 +46,7 @@ def generic_iterative_method(a, b, tol, stop='scaled_residue'):
         # increment over two successive iterations
         pass
 
-    while k < 100 and not stop_check:
+    while k <= max_iter and not stop_check:
         # computing P^-1
         inverted_p = compute_inverted_p(a, n)
         print("inverted_p = ", inverted_p)
@@ -67,6 +68,10 @@ def generic_iterative_method(a, b, tol, stop='scaled_residue'):
 
     print(f"x = {x}")
     print(f"k = {k}")
+    print(f"tol = {tol}")
+
+    if k > max_iter:
+        print(f"Exceeded max number of iterations: {k}")
 
     return x
 
