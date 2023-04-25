@@ -44,17 +44,22 @@ def input_validation(a, b):
 
     if linalg.det(a) == 0:
         raise Exception(f"Negative determinant for a matrix: {a}")
+
+    # TODO: add check for diagonal dominance
     
 
     return n
 
 
 # generic iterative method:
-def generic_iterative_method(a, b, tol=0.0001, stop='scaled_residue'):
+def generic_iterative_method(a, b, tol=0.0001, stop='scaled_residue', validation=False):
     # TODO: pay attention to /0 operations
 
-    # get A matrix dimensions
-    n = a.shape[0]
+    if validation:
+        n = input_validation(a, b)
+    else:
+        # get A matrix dimensions
+        n = a.shape[0]
 
     # init counter, stop_check, null vector, max_iter
     k = 0
@@ -109,8 +114,6 @@ def generic_iterative_method(a, b, tol=0.0001, stop='scaled_residue'):
 
 
 a = np.array([5, 2, 3, 4]).reshape(2, 2)
-print(a)
-
 b = np.array([30, 46])
 
-generic_iterative_method(a, b, stop='scaled_residue')
+generic_iterative_method(a, b, stop='scaled_residue', validation=True)
