@@ -11,6 +11,8 @@ def compute_inverted_p(a, n):
 
     a_diag = a.diagonal()
 
+    # this check only has value for the Jacobi's method
+    # should use determinant on P matrix to generalize this control
     if 0 in a_diag:
         raise Exception(f"P matrix has a null determinant, hence it's singular and can't compute p_1 matrix")
 
@@ -51,8 +53,24 @@ def input_validation(a, b):
     return n
 
 
+def forward_substitution(l, r, n):
+    y = np.zeros(n)
+    if l[0, 0] == 0:
+        raise Exception(f"input matrix l: {l} has zero values on diagonal")
+    y[0] = r[0] / l[0, 0]
+
+    for i in range(1, n):
+        print(i)
+        if l[i, i] == 0:
+            raise Exception(f"input matrix l: {l}  has zero values on diagonal")
+
+        y[i] = (r[i] - l[i].dot(y))/l[i, i] 
+
+    return y
+
+
 # generic iterative method:
-def generic_iterative_method(a, b, tol=0.0001, stop='scaled_residue', validation=False):
+def generic_iterative_method(a, b, tol=0.0001, validation=False):
     # TODO: pay attention to /0 operations
 
     if validation:
@@ -71,15 +89,6 @@ def generic_iterative_method(a, b, tol=0.0001, stop='scaled_residue', validation
     if not np.any(b):
         print("A null b vector is passed")
         return x
-
-    
-    # do i actually need this if condition ??
-    if stop == "scaled_residue":
-        pass
-    
-    else:
-        # increment over two successive iterations
-        pass
 
     # computing P^-1
     inverted_p = compute_inverted_p(a, n)
@@ -116,4 +125,8 @@ def generic_iterative_method(a, b, tol=0.0001, stop='scaled_residue', validation
 a = np.array([5, 2, 3, 4]).reshape(2, 2)
 b = np.array([30, 46])
 
-generic_iterative_method(a, b, stop='scaled_residue', validation=True)
+# generic_iterative_method(a, b, validation=True)
+
+
+
+print(forward_substitution(np.tril(a), b, a.shape[0]))
