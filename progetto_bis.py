@@ -16,9 +16,30 @@ def compute_inverted_p(a, n):
     if 0 in a_diag:
         raise Exception(f"P matrix has a null determinant, hence it's singular and can't compute p_1 matrix")
 
-    np.fill_diagonal(p_1, 1/a.diagonal())
+    np.fill_diagonal(p_1, 1/a_diag)
     
     return p_1
+
+def compute_p(a, n, method):
+
+    if method == 'jacobi':
+        p_1 = np.zeros((n, n))
+        a_diag = a.diagonal()
+        np.fill_diagonal(p_1, a_diag)
+
+    elif method == 'GS':
+        p_1 = np.tril(a)  
+
+    else:
+        raise Exception(f"No options found for method: {method}")
+
+    # check if is non-singular
+    if linalg.det(p_1) == 0:
+        raise Exception(f"Negative determinant for a matrix: {p_1}")
+
+    return p_1
+
+
 
 def compute_residue(a, x, b):
     return a.dot(x) - b
@@ -70,7 +91,7 @@ def forward_substitution(l, r, n):
 
 
 # generic iterative method:
-def generic_iterative_method(a, b, tol=0.0001, validation=False):
+def generic_iterative_method(a, b, method, tol=0.0001, validation=False):
     # TODO: pay attention to /0 operations
 
     if validation:
@@ -90,9 +111,7 @@ def generic_iterative_method(a, b, tol=0.0001, validation=False):
         print("A null b vector is passed")
         return x
 
-    # computing P^-1
-    inverted_p = compute_inverted_p(a, n)
-    print("inverted_p = ", inverted_p)
+    p = compute_p(a, n, method)
 
     while k <= max_iter and not stop_check:
 
@@ -101,7 +120,7 @@ def generic_iterative_method(a, b, tol=0.0001, validation=False):
         print("r = ", r)
 
         # compunting new x
-        x = x - inverted_p.dot(r)
+        x = x - forward_substitution(p, r, n)
         print("x = ", x)
 
         # increasing iterations counter
@@ -125,8 +144,6 @@ def generic_iterative_method(a, b, tol=0.0001, validation=False):
 a = np.array([5, 2, 3, 4]).reshape(2, 2)
 b = np.array([30, 46])
 
-# generic_iterative_method(a, b, validation=True)
+generic_iterative_method(a, b, 'GS', validation=True)
 
 
-
-print(forward_substitution(np.tril(a), b, a.shape[0]))
