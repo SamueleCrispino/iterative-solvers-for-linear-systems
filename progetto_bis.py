@@ -5,21 +5,6 @@ from numpy import linalg
 
 
 
-def compute_inverted_p(a, n):
-    # init P
-    p_1 = np.zeros((n, n))
-
-    a_diag = a.diagonal()
-
-    # this check only has value for the Jacobi's method
-    # should use determinant on P matrix to generalize this control
-    if 0 in a_diag:
-        raise Exception(f"P matrix has a null determinant, hence it's singular and can't compute p_1 matrix")
-
-    np.fill_diagonal(p_1, 1/a_diag)
-    
-    return p_1
-
 def compute_p(a, n, method):
 
     if method == 'jacobi':
