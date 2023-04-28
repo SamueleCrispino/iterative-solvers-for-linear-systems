@@ -13,13 +13,14 @@ def create_mock(a):
 
     return real_x, b
 
-def init_values(a, n):
+def init_values(a, b, n):
     k = 0
     stop_check = False
     x = np.zeros(n)
-    max_iter = 2000 if n <= 2000 else n
+    max_iter = 8000 if n <= 8000 else n 
+    B_NORM = linalg.norm(b)
 
-    return k, stop_check, x, max_iter
+    return k, stop_check, x, max_iter, B_NORM
 
 def compute_p(a, n, method):
 
@@ -30,7 +31,7 @@ def compute_p(a, n, method):
         p_1.setdiag(a_diag)
 
     elif method == 'GS':
-        p_1 = tril(a)  
+        p_1 = tril(a) 
 
     else:
         raise Exception(f"No options found for method: {method}")
@@ -41,13 +42,15 @@ def compute_p(a, n, method):
 
     return p_1.tocsr()
 
+def compute_gradient_alfa(a, r):
+    pass
 
 
 def compute_residue(a, x, b):
     return a.dot(x) - b
 
-def compare_scaled_residue(r, b, tol):
-    return linalg.norm(r) / linalg.norm(b) < tol
+def compare_scaled_residue(r, B_NORM, tol):
+    return linalg.norm(r) / B_NORM < tol
 
 
 def input_validation(a, b):
@@ -78,16 +81,18 @@ def input_validation(a, b):
 
 def forward_substitution(l, r, n):
     y = np.zeros(n)
-
-    if l[0, 0] == 0:
+    pivot = l[0, 0]
+    if pivot == 0:
         raise Exception(f"input matrix l: {l} has zero values on diagonal")
-    y[0] = r[0] / l[0, 0]
+    y[0] = r[0] / pivot
 
     for i in range(1, n):
-        if l[i, i] == 0:
+        pivot = l[i, i]
+
+        if pivot == 0:
             raise Exception(f"input matrix l: {l}  has zero values on diagonal")
 
-        y[i] = (r[i] - l[i].dot(y))/l[i, i] 
+        y[i] = (r[i] - l[i].dot(y))/pivot
 
     return y
 
@@ -95,6 +100,8 @@ def forward_substitution(l, r, n):
 # generic iterative method:
 def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False):
     # TODO: pay attention to /0 operations
+
+    
 
     print("Starting iterative method")
 
@@ -106,7 +113,7 @@ def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False)
 
 
     # init counter, stop_check, null vector, max_iter, real_X, b vector
-    k, stop_check, x, max_iter = init_values(a, n)
+    k, stop_check, x, max_iter, B_NORM = init_values(a, b, n)
     
     print(f"tol = {tol}")
     print(f"max_iter = {max_iter}")
@@ -134,7 +141,7 @@ def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False)
             #print(k)
 
             # computing stop check
-            stop_check = compare_scaled_residue(r, b, tol)
+            stop_check = compare_scaled_residue(r, B_NORM, tol)
             
             pbar.update(1)
 
