@@ -17,7 +17,7 @@ def init_values(a, b, n):
     k = 0
     stop_check = False
     x = np.zeros(n)
-    max_iter = 8000 if n <= 8000 else n 
+    max_iter = 20000 if n <= 20000 else n 
     B_NORM = linalg.norm(b)
 
     return k, stop_check, x, max_iter, B_NORM
@@ -33,6 +33,9 @@ def compute_p(a, n, method):
     elif method == 'GS':
         p_1 = tril(a) 
 
+    elif method == 'gradient':
+        return None
+
     else:
         raise Exception(f"No options found for method: {method}")
 
@@ -43,7 +46,7 @@ def compute_p(a, n, method):
     return p_1.tocsr()
 
 def compute_gradient_alfa(a, r):
-    pass
+    return r.dot(r) / (r.dot(a.dot(r)))
 
 
 def compute_residue(a, x, b):
@@ -99,9 +102,7 @@ def forward_substitution(l, r, n):
 
 # generic iterative method:
 def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False):
-    # TODO: pay attention to /0 operations
-
-    
+    # TODO: pay attention to /0 operations    
 
     print("Starting iterative method")
 
@@ -133,7 +134,11 @@ def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False)
             #print("r = ", r)
 
             # compunting new x
-            x = x - forward_substitution(p, r, n)
+            if method in ["jacobi", "GS"]:
+                x = x - forward_substitution(p, r, n)
+            if method == "gradient":
+                alfa = compute_gradient_alfa(a, r)
+                x = x - alfa*r
             #print("x = ", x)
 
             # increasing iterations counter
@@ -158,14 +163,23 @@ def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False)
 
     return x
 
-def main():
-    a = mmread('data/vem1.mtx')
+def build_sparse_matrix():
+    row  = np.array([0, 3, 1, 0, 2])
+    col  = np.array([0, 3, 1, 2, 2])
+    data = np.array([4, 5, 7, 9, 3])
+    a = coo_matrix((data, (row, col)), shape=(4, 4)).toarray()
+    return a
 
+def main():
+    a = mmread('data/spa1.mtx')
+    
     #a = coo_matrix(np.array([5, 2, 3, 4]).reshape(2, 2))
+
+    
     
     real_x, b = create_mock(a)
 
-    generic_iterative_method(a, b, real_x, 'GS', validation=False)
+    generic_iterative_method(a, b, real_x, 'gradient', validation=False)
 
 
 
