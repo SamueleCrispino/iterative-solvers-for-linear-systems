@@ -138,7 +138,8 @@ def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False)
                 x = x - forward_substitution(p, r, n)
             if method == "gradient":
                 alfa = compute_gradient_alfa(a, r)
-                x = x - alfa*r
+                # i've computed r as Ax - b so there i need to substract
+                x = x - alfa*r 
             #print("x = ", x)
 
             # increasing iterations counter
