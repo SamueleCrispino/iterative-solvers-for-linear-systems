@@ -4,6 +4,8 @@ from scipy.io import mmread
 from scipy.sparse import csr_matrix, tril, coo_matrix
 from numpy import linalg
 
+NON_STATIONARY_METHODS = ["gradient", "conjugate_gradient"]
+
 def compute_rel_error(x, real_x):
     return linalg.norm(x - real_x) / linalg.norm(real_x)
 
@@ -33,8 +35,10 @@ def compute_p(a, n, method):
     elif method == 'GS':
         p_1 = tril(a) 
 
-    elif method == 'gradient':
+    elif method in NON_STATIONARY_METHODS:
         return None
+
+    
 
     else:
         raise Exception(f"No options found for method: {method}")
@@ -131,6 +135,8 @@ def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False)
         # get A matrix dimensions
         n = a.shape[0]
 
+    print(f"Matrix dimension: {n}")
+
 
     # init counter, stop_check, null vector, max_iter, real_X, b vector
     k, stop_check, x, max_iter, B_NORM = init_values(a, b, n)
@@ -157,7 +163,7 @@ def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False)
             # compunting new x
             if method in ["jacobi", "GS"]:
                 x = x - forward_substitution(p, r, n)
-            if method in ["gradient", "conjugate_gradient"]:
+            if method in NON_STATIONARY_METHODS:
                 y = compute_y(a, r, d_next)
                 alfa = compute_gradient_alfa(a, r, y, d_next)
                 
@@ -168,7 +174,7 @@ def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False)
                     r_next = compute_residue(a, x, b)
                     w = a.dot(r_next)
                     beta = r.dot(w) / r.dot(y)
-                    d_next = r_next - beta.dot(r)
+                    d_next = r_next - beta*r
             #print("x = ", x)
 
             # increasing iterations counter
@@ -209,7 +215,7 @@ def main():
     
     real_x, b = create_mock(a)
 
-    generic_iterative_method(a, b, real_x, 'conjugate_gradient', validation=False)
+    generic_iterative_method(a, b, real_x, 'jacobi', validation=False)
 
 
 
