@@ -45,8 +45,11 @@ def compute_p(a, n, method):
 
     return p_1.tocsr()
 
-def compute_gradient_alfa(a, r):
-    return r.dot(r) / (r.dot(a.dot(r)))
+def compute_gradient_alfa(a, r, y, d_next):
+    if d_next == None:
+        return r.dot(r) / (r.dot(y))
+    else:
+        return d_next.dot(r) / d_next.dot(y)
 
 
 def compute_residue(a, x, b):
@@ -99,6 +102,22 @@ def forward_substitution(l, r, n):
 
     return y
 
+def compute_y(a, r, d_next):
+    # y = A*d
+    if d_next == None:
+        y = a.dot(r)
+    else:
+        y = a.dot(d_next)
+
+    return y
+
+def compute_next_x(x, alfa, r, d_next):
+    if d_next == None:
+        return x - alfa*r
+    else:
+        return x - alfa*d_next
+
+
 
 # generic iterative method:
 def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False):
@@ -128,18 +147,28 @@ def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False)
 
     with tqdm(total = max_iter) as pbar:
         while k <= max_iter and not stop_check:
+            r_next = None
+            d_next = None
 
             # computing residue
-            r = compute_residue(a, x, b)
+            r = compute_residue(a, x, b) if r_next == None else r_next
             #print("r = ", r)
 
             # compunting new x
             if method in ["jacobi", "GS"]:
                 x = x - forward_substitution(p, r, n)
-            if method == "gradient":
-                alfa = compute_gradient_alfa(a, r)
+            if method in ["gradient", "conjugate_gradient"]:
+                y = compute_y(a, r, d_next)
+                alfa = compute_gradient_alfa(a, r, y, d_next)
+                
                 # i've computed r as Ax - b so there i need to substract
-                x = x - alfa*r 
+                x = compute_next_x(x, alfa, r, d_next)
+                
+                if method == "conjugate_gradient":
+                    r_next = compute_residue(a, x, b)
+                    w = a.dot(r_next)
+                    beta = r.dot(w) / r.dot(y)
+                    d_next = r_next - beta.dot(r)
             #print("x = ", x)
 
             # increasing iterations counter
@@ -180,7 +209,7 @@ def main():
     
     real_x, b = create_mock(a)
 
-    generic_iterative_method(a, b, real_x, 'gradient', validation=False)
+    generic_iterative_method(a, b, real_x, 'conjugate_gradient', validation=False)
 
 
 
