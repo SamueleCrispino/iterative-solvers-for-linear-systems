@@ -1,10 +1,23 @@
+import time
+import sys
 import numpy as np
 from tqdm import tqdm
 from scipy.io import mmread
 from scipy.sparse import csr_matrix, tril, coo_matrix
 from numpy import linalg
 
+# CONSTANTS
+STATIONARY_METHODS = ["jacobi", "Gauß-Seidel"]
 NON_STATIONARY_METHODS = ["gradient", "conjugate_gradient"]
+METHODS = STATIONARY_METHODS + NON_STATIONARY_METHODS
+
+
+def build_sparse_matrix():
+    row  = np.array([0, 3, 1, 0, 2])
+    col  = np.array([0, 3, 1, 2, 2])
+    data = np.array([4, 5, 7, 9, 3])
+    a = coo_matrix((data, (row, col)), shape=(4, 4)).toarray()
+    return a
 
 def compute_rel_error(x, real_x):
     return linalg.norm(x - real_x) / linalg.norm(real_x)
@@ -32,13 +45,11 @@ def compute_p(a, n, method):
         #np.fill_diagonal(p_1, a_diag)
         p_1.setdiag(a_diag)
 
-    elif method == 'GS':
+    elif method == 'Gauß-Seidel':
         p_1 = tril(a) 
 
     elif method in NON_STATIONARY_METHODS:
         return None
-
-    
 
     else:
         raise Exception(f"No options found for method: {method}")
@@ -84,9 +95,6 @@ def input_validation(a, b):
         raise Exception(f"Negative determinant for a matrix: {a}")
 
     # TODO: add check for diagonal dominance
-    
-
-    return n
 
 
 def forward_substitution(l, r, n):
@@ -120,29 +128,57 @@ def compute_next_x(x, alfa, r, d_next):
         return x - alfa*r
     else:
         return x - alfa*d_next
+    
+def print_summary(exec_data, method):
+    print("*"*50)
+    print(f"Summary for {method} method:")
+    for k, v in exec_data[method].items():
+        if k != "iterations":
+            print(f"{k} = {v}")
+    print("*"*50)
+
+    
+def compute_summary(method, exec_data, k, n, tol, max_iter, start_time, end_time, x, real_x):
+    elapsed_time = end_time - start_time
+    
+    err_rel = compute_rel_error(x, real_x)
+    
+    exec_data[method]["matrix_dimension"] = n
+    exec_data[method]["tol"] = tol
+    exec_data[method]["max_iter"] = max_iter
+    exec_data[method]["err_rel"] = err_rel
+    exec_data[method]["iterations_number"] = k
+    exec_data[method]["elapsed_time"] = elapsed_time
+    exec_data[method]["iteration_time_avg"] = elapsed_time / k
+    
+    print_summary(exec_data, method)
+
+    return exec_data
 
 
 
 # generic iterative method:
-def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False):
-    # TODO: pay attention to /0 operations    
+def generic_iterative_method(a, b, real_x, method, exec_data, tol, validation=False):
+    # TODO: pay attention to /0 operations  
+    exec_data[method] = {}
+    exec_data[method]["iterations"] = {}
 
-    print("Starting iterative method")
+    # Start the timer
+    start_time = time.time()  
 
+    print(f"Starting iterative {method} method")
+
+    #TODO: this can be done outside the iterative method
     if validation:
-        n = input_validation(a, b)
-    else:
-        # get A matrix dimensions
-        n = a.shape[0]
+        input_validation(a, b)
+    
+    #TODO: this can be done outside the iterative method
+    # get A matrix dimensions
+    n = a.shape[0]
 
-    print(f"Matrix dimension: {n}")
-
-
+    #TODO: this can be done outside the iterative method
     # init counter, stop_check, null vector, max_iter, real_X, b vector
     k, stop_check, x, max_iter, B_NORM = init_values(a, b, n)
-    
-    print(f"tol = {tol}")
-    print(f"max_iter = {max_iter}")
 
     # case b = null and assuming that determinant of a matrix is different from zero
     if not np.any(b):
@@ -161,7 +197,7 @@ def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False)
             #print("r = ", r)
 
             # compunting new x
-            if method in ["jacobi", "GS"]:
+            if method in STATIONARY_METHODS:
                 x = x - forward_substitution(p, r, n)
             if method in NON_STATIONARY_METHODS:
                 y = compute_y(a, r, d_next)
@@ -175,55 +211,77 @@ def generic_iterative_method(a, b, real_x, method, tol=0.0001, validation=False)
                     w = a.dot(r_next)
                     beta = r.dot(w) / r.dot(y)
                     d_next = r_next - beta*r
-            #print("x = ", x)
+            
 
             # increasing iterations counter
             k = k + 1
-            #print(k)
+            exec_data[method]["iterations"][k] = r
 
             # computing stop check
             stop_check = compare_scaled_residue(r, B_NORM, tol)
             
             pbar.update(1)
 
-    # TODO: saving these for plot
+    # End the timer and elapsed time in seconds
+    end_time = time.time()
     
-
     if k > max_iter:
         print(f"Exceeded max number of iterations: {max_iter}")
 
-    print(f"x = {x}")
-    print(f"k = {k}")
-    err_rel = compute_rel_error(x, real_x)
-    print(f"err_rel = {err_rel}")
+    exec_data = compute_summary(method, exec_data, k, n, tol, max_iter,
+                                start_time, end_time, x, real_x)
 
-    return x
 
-def build_sparse_matrix():
-    row  = np.array([0, 3, 1, 0, 2])
-    col  = np.array([0, 3, 1, 2, 2])
-    data = np.array([4, 5, 7, 9, 3])
-    a = coo_matrix((data, (row, col)), shape=(4, 4)).toarray()
-    return a
+    return x, exec_data
 
-def main():
-    a = mmread('data/spa1.mtx')
+
+def main(matrix_list, tol_list):
+    # execution data summary init
+    execution_data = {} 
+       
+    for matrix in matrix_list:
+        file_name = matrix
+        a = mmread(file_name)
+
+        for tol in tol_list:
+            # real solution
+            real_x, b = create_mock(a)           
+            
+            matrix_name = file_name.split("/")[-1]
+
+            if matrix_name not in execution_data:
+                execution_data[matrix_name] = {}
+                print(f"matrix name: {matrix_name}")
+            
+            if tol not in execution_data[matrix_name]:
+                execution_data[matrix_name][tol] = {}
+                print(f"tol: {tol}")
     
-    #a = coo_matrix(np.array([5, 2, 3, 4]).reshape(2, 2))
+            print("*"*50)
+            print("*"*50)
 
-    
-    
-    real_x, b = create_mock(a)
-
-    generic_iterative_method(a, b, real_x, 'jacobi', validation=False)
-
+            for method in METHODS:
+                x, execution_data[matrix_name][tol] = generic_iterative_method(a, b, real_x, method, 
+                                                    execution_data[matrix_name][tol], tol, 
+                                                    validation=False)
+        
+    return execution_data
 
 
 if __name__ == "__main__":
-    main()
+    # Assuming two lists are passed as command-line arguments
+    if len(sys.argv) != 3:
+        print('Usage: python script.py matrix_list tol_list')
+        sys.exit(1)
 
-#a = np.array([5, 2, 3, 4]).reshape(2, 2)
-#b = np.array([30, 46])
+    # Extract the lists from command-line arguments
+    matrix_list = sys.argv[1].split(',')
+    tol_list = sys.argv[2].split(',')
+
+    main(matrix_list, tol_list)
+
+
+
 
 
 
