@@ -7,8 +7,8 @@ from scipy.sparse import csr_matrix, tril, coo_matrix
 from numpy import linalg
 from decimal import Decimal
 
-from utils import *
-from generic_iterative_method import *
+from implementations.utils.functions import *
+from implementations.simple_approach.generic_iterative_method import *
 
 
 def main(matrix_list, tol_list):
