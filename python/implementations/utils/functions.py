@@ -121,7 +121,6 @@ def compute_y(a, r, d_next):
         y = a.dot(r)
     else:
         y = a.dot(d_next)
-
     return y
 
 def compute_next_x(x, alfa, r, d_next):
@@ -155,5 +154,10 @@ def compute_summary(method, exec_data, k, n, tol, max_iter, start_time, end_time
     print_summary(exec_data, method)
 
     return exec_data
+
+def print_summary(class_instance, PARAMS_TO_PRINT):
+    for k, v in vars(class_instance).items():
+        if k in PARAMS_TO_PRINT:
+            print(f"{k} = {v} ")  
 
 

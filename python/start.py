@@ -46,6 +46,10 @@ def main(matrix_list, tol_list):
 
 
 if __name__ == "__main__":
+    # TODO: define input handler
+
+    # TODO: Move other subroutines in some subfolder
+
     # Assuming two lists are passed as command-line arguments
     if len(sys.argv) != 3:
         print('Usage: python script.py matrix_list tol_list')
