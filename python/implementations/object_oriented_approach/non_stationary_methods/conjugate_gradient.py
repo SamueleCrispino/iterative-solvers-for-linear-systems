@@ -28,6 +28,7 @@ class Conjugate_gradient(Gradient):
         else:
             self.d = self.d_next
         self.compute_y()
+        # optimizing d*y that is used both in alfa and beta computation
         self.z = self.d.dot(self.y)
         self.alfa = self.d.dot(self.r) / self.z
 

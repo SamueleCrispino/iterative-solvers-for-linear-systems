@@ -4,7 +4,7 @@ from tqdm import tqdm
 from scipy.io import mmread
 from scipy.sparse import tril
 
-from python.implementations.utils.functions import *
+from implementations.utils.utils import *
 
 # generic iterative method:
 def generic_iterative_method(a, b, real_x, method, exec_data, tol, validation=False):
@@ -35,33 +35,40 @@ def generic_iterative_method(a, b, real_x, method, exec_data, tol, validation=Fa
         return x
 
     p = compute_p(a, n, method)
-
+    
+    r_next = None
+    d_next = None
+        
     with tqdm(total = max_iter) as pbar:
         while k <= max_iter and not stop_check:
-            r_next = None
-            d_next = None
-
             # computing residue
-            r = compute_residue(a, x, b) if r_next == None else r_next
+            r = compute_residue(a, x, b) if k == 0 or method != "conjugate_gradient" else r_next
             #print("r = ", r)
 
             # compunting new x
             if method in STATIONARY_METHODS:
                 x = x - forward_substitution(p, r, n)
             if method in NON_STATIONARY_METHODS:
-                y = compute_y(a, r, d_next)
-                alfa = compute_gradient_alfa(a, r, y, d_next)
+                y = compute_y(a, r, d_next, k, method)
+
+                if k == 0 or method != "conjugate_gradient":
+                    z = r.dot(y)
+                else:                    
+                    z = d_next.dot(y)
                 
-                # i've computed r as Ax - b so there i need to substract
-                x = compute_next_x(x, alfa, r, d_next)
+                alfa = compute_gradient_alfa(r, d_next, z, k, method)
+                
+                x = compute_next_x(x, alfa, r, d_next, k, method)
                 
                 if method == "conjugate_gradient":
                     r_next = compute_residue(a, x, b)
                     w = a.dot(r_next)
-                    beta = r.dot(w) / r.dot(y)
-                    d_next = r_next - beta*r
-            
-
+                    beta = r.dot(w) / z
+                    if k == 0 or method != "conjugate_gradient":
+                        d_next = r_next - beta*r
+                    else:
+                        d_next = r_next - beta*d_next
+                    
             # increasing iterations counter
             k = k + 1
             exec_data[method]["iterations"][k] = r

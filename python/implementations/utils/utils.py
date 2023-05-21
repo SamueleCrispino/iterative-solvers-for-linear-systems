@@ -11,7 +11,6 @@ STATIONARY_METHODS = ["jacobi", "Gauß-Seidel"]
 NON_STATIONARY_METHODS = ["gradient", "conjugate_gradient"]
 METHODS = STATIONARY_METHODS + NON_STATIONARY_METHODS
 
-
 # METHODS:
 def build_sparse_matrix():
     row  = np.array([0, 3, 1, 0, 2])
@@ -61,11 +60,11 @@ def compute_p(a, n, method):
 
     return p_1.tocsr()
 
-def compute_gradient_alfa(a, r, y, d_next):
-    if d_next == None:
-        return r.dot(r) / (r.dot(y))
+def compute_gradient_alfa(r, d_next, z, k, method):
+    if k == 0 or method != "conjugate_gradient":
+        return r.dot(r) / z
     else:
-        return d_next.dot(r) / d_next.dot(y)
+        return d_next.dot(r) / z
 
 
 def compute_residue(a, x, b):
@@ -115,16 +114,17 @@ def forward_substitution(l, r, n):
 
     return y
 
-def compute_y(a, r, d_next):
-    # y = A*d
-    if d_next == None:
+def compute_y(a, r, d_next, k, method):
+    # y = A*d --> d di questa iterazione = d_next dell'iterazione precedente
+    if k == 0 or method != "conjugate_gradient":
         y = a.dot(r)
     else:
         y = a.dot(d_next)
     return y
 
-def compute_next_x(x, alfa, r, d_next):
-    if d_next == None:
+def compute_next_x(x, alfa, r, d_next, k, method):
+    # i've computed r as Ax - b so there i need to substract
+    if k == 0 or method != "conjugate_gradient":
         return x - alfa*r
     else:
         return x - alfa*d_next
@@ -155,7 +155,7 @@ def compute_summary(method, exec_data, k, n, tol, max_iter, start_time, end_time
 
     return exec_data
 
-def print_summary(class_instance, PARAMS_TO_PRINT):
+def print_class_summary(class_instance, PARAMS_TO_PRINT):
     for k, v in vars(class_instance).items():
         if k in PARAMS_TO_PRINT:
             print(f"{k} = {v} ")  
