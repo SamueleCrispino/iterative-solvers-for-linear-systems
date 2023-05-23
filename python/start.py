@@ -52,7 +52,9 @@ if __name__ == "__main__":
 
     # Assuming two lists are passed as command-line arguments
     if len(sys.argv) != 3:
-        print('Usage: python script.py matrix_list tol_list')
+        print('Usage: python start.py matrix_list tol_list')
+        print("matrix_list and matrix_list must be two comma seprated list such as:")
+        print("python start.py ..\data\spa1.mtx,..\data\spa2.mtx 0.0001,0.000001")
         sys.exit(1)
 
     # Extract the lists from command-line arguments

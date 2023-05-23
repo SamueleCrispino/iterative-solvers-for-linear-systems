@@ -80,7 +80,7 @@ def input_validation(a, b):
     
     # check a simmetry:
     if not n == n1:
-        raise Exception(f"Non-symmetric a matrix, dimensions found {n}, {n1}") 
+        raise Exception(f"Non-quadratic matrix, dimensions found {n}, {n1}") 
 
     b_dim = b.shape[0]
     
@@ -92,7 +92,7 @@ def input_validation(a, b):
         raise Exception(f"a matrix is not positive definite")
 
     if linalg.det(a) == 0:
-        raise Exception(f"Negative determinant for a matrix: {a}")
+        raise Exception(f"Zero determinant for a matrix: {a}, it's singular, not invertible")
 
     # TODO: add check for diagonal dominance
 
