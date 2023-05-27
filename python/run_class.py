@@ -42,6 +42,11 @@ def main(file_name, tol):
 
 
 if __name__ == "__main__":
-    file_name = "../data/vem1.mtx"
-    tol = 10**-8
-    main(file_name, tol)
+    try:
+        file_name = sys.argv[1]
+        tol = Decimal(sys.argv[2])
+        
+        main(file_name, tol)
+    except Exception as e:
+        print(e)
+        

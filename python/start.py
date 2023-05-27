@@ -18,11 +18,13 @@ def main(matrix_list, tol_list):
     for matrix in matrix_list:
         file_name = matrix
         a = mmread(file_name)
+        # real solution
+        real_x, b = create_mock(a)  
 
         for tol in tol_list:
             tol = Decimal(tol)
-            # real solution
-            real_x, b = create_mock(a)           
+            
+                     
             
             matrix_name = file_name.split("/")[-1]
 
@@ -52,16 +54,17 @@ if __name__ == "__main__":
 
     # Assuming two lists are passed as command-line arguments
     if len(sys.argv) != 3:
-        print('Usage: python start.py matrix_list tol_list')
-        print("matrix_list and matrix_list must be two comma seprated list such as:")
-        print("python start.py ..\data\spa1.mtx,..\data\spa2.mtx 0.0001,0.000001")
-        sys.exit(1)
+        input_error()
+    try:
+        # Extract the lists from command-line arguments
+        matrix_list = sys.argv[1].split(',')
+        tol_list = sys.argv[2].split(',')
 
-    # Extract the lists from command-line arguments
-    matrix_list = sys.argv[1].split(',')
-    tol_list = sys.argv[2].split(',')
+        main(matrix_list, tol_list)
+    except Exception as e:
+        print(e)
+        input_error()
 
-    main(matrix_list, tol_list)
 
 
 

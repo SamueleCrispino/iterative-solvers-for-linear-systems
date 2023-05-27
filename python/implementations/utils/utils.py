@@ -162,3 +162,8 @@ def print_class_summary(class_instance, PARAMS_TO_PRINT):
             print(f"{k} = {v} ")  
 
 
+def input_error():
+    print('Usage: python start.py matrix_list tol_list')
+    print("matrix_list and matrix_list must be two comma seprated list such as:")
+    print("python start.py ..\data\spa1.mtx,..\data\spa2.mtx 0.0001,0.000001")
+    sys.exit(1)
