@@ -71,7 +71,8 @@ def compute_residue(a, x, b):
     return a.dot(x) - b
 
 def compare_scaled_residue(r, B_NORM, tol):
-    return linalg.norm(r) / B_NORM < tol
+    scaled_residue = linalg.norm(r) / B_NORM
+    return scaled_residue, scaled_residue < tol
 
 
 def input_validation(a, b):

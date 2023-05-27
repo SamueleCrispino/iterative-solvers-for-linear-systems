@@ -17,7 +17,6 @@ class Iterative_method:
         self.err_rel = None
         self.iteration_time_avg = None
         self.convergence = {}
-        self.abs_convergence = {}
         
         # class variables start parameters
         self.a = a
@@ -60,7 +59,6 @@ class Iterative_method:
         self.compare_scaled_residue()
         self.k+=1 
         self.convergence[self.k] = self.scaled_residue
-        self.abs_convergence[self.k] = abs(self.scaled_residue)
         
     def compute_reporting_summary(self):
         self.compute_rel_error()

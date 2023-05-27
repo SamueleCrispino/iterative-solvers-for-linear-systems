@@ -69,12 +69,14 @@ def generic_iterative_method(a, b, real_x, method, exec_data, tol, validation=Fa
                     else:
                         d_next = r_next - beta*d_next
                     
+            scaled_residue, stop_check = compare_scaled_residue(r, B_NORM, tol)
+            
             # increasing iterations counter
             k = k + 1
-            exec_data[method]["iterations"][k] = r
+            exec_data[method]["iterations"][k] = scaled_residue
 
             # computing stop check
-            stop_check = compare_scaled_residue(r, B_NORM, tol)
+            
             
             pbar.update(1)
 

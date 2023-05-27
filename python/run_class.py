@@ -22,24 +22,26 @@ def main(file_name, tol):
     a = mmread(file_name)
     real_x, b = create_mock(a)    
     
-    solver = Jacobi(tol, a, b, real_x)
-    solution = solver.run()
-    print_class_summary(solver, PARAMS_TO_PRINT)
+    jacobi = Jacobi(tol, a, b, real_x)
+    solution = jacobi.run()
+    print_class_summary(jacobi, PARAMS_TO_PRINT)
+    
+    gs = Gauß_Seidel(tol, a, b, real_x)
+    solution = gs.run()
+    print_class_summary(gs, PARAMS_TO_PRINT)
+    
+    gradient = Gradient(tol, a, b, real_x)
+    solution = gradient.run()
+    print_class_summary(gradient, PARAMS_TO_PRINT)
 
-    solver = Gauß_Seidel(tol, a, b, real_x)
-    solution = solver.run()
-    print_class_summary(solver, PARAMS_TO_PRINT)
+    conj_grad = Conjugate_gradient(tol, a, b, real_x)
+    solution = conj_grad.run()
+    print_class_summary(conj_grad, PARAMS_TO_PRINT)
 
-    solver = Gradient(tol, a, b, real_x)
-    solution = solver.run()
-    print_class_summary(solver, PARAMS_TO_PRINT)
-
-    solver = Conjugate_gradient(tol, a, b, real_x)
-    solution = solver.run()
-    print_class_summary(solver, PARAMS_TO_PRINT)
+    return jacobi, gs, gradient, conj_grad
 
 
 if __name__ == "__main__":
-    file_name = "../data/spa1.mtx"
-    tol = 10**-4
+    file_name = "../data/vem1.mtx"
+    tol = 10**-8
     main(file_name, tol)
